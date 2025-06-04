@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %></title>
+    <title>Chess Game - Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -24,18 +24,33 @@
 </head>
 <body class="flex items-center justify-center min-h-screen">
     <div class="chess-pattern absolute inset-0"></div>
-    
+
     <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md relative z-10">
         <div class="text-center mb-8">
             <h1 class="text-3xl font-bold text-gray-800 mb-2">♚ Chess Game</h1>
             <p class="text-gray-600">Login to start playing</p>
         </div>
-        
+
+        <!-- Already logged in block -->
+        <div class="mt-6 text-center" id="loggedInUser" style="display: none;">
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                <p class="text-green-800 font-medium">Already logged in as:</p>
+                <p class="text-green-900 font-bold text-lg" id="currentUser"></p>
+            </div>
+            <div class="flex gap-3 justify-center">
+                <button onclick="goToGame()" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition duration-200">
+                    Go to Game
+                </button>
+                <button onclick="logout()" class="px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition duration-200">
+                    Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- Login form -->
         <form id="loginForm" class="space-y-6">
             <div>
-                <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
-                    Username
-                </label>
+                <label for="username" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
                 <input 
                     type="text" 
                     id="username" 
@@ -45,11 +60,9 @@
                     placeholder="Enter your username"
                 >
             </div>
-            
+
             <div>
-                <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-                    Password
-                </label>
+                <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
                 <input 
                     type="password" 
                     id="password" 
@@ -59,7 +72,7 @@
                     placeholder="Enter your password"
                 >
             </div>
-            
+
             <button 
                 type="submit"
                 class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
@@ -67,32 +80,62 @@
                 Login
             </button>
         </form>
-        
+
         <div class="mt-6 text-center">
             <p class="text-gray-600">
                 Don't have an account? 
-                <a href="/register" class="text-blue-600 hover:text-blue-800 font-medium">
-                    Register here
-                </a>
+                <a href="/register" class="text-blue-600 hover:text-blue-800 font-medium">Register here</a>
             </p>
         </div>
-        
+
         <div id="errorMessage" class="mt-4 text-red-600 text-center hidden"></div>
     </div>
 
     <script>
+        window.addEventListener('load', function () {
+            checkExistingLogin();
+        });
+
+        function checkExistingLogin() {
+            const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+
+            if (token && username) {
+                document.getElementById('currentUser').textContent = username;
+                document.getElementById('loggedInUser').style.display = 'block';
+                document.getElementById('loginForm').style.display = 'none';
+            } else {
+                document.getElementById('loggedInUser').style.display = 'none';
+                document.getElementById('loginForm').style.display = 'block';
+            }
+        }
+
+        function goToGame() {
+            window.location.href = '/';
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('username');
+                checkExistingLogin();
+            }
+        }
+
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const errorDiv = document.getElementById('errorMessage');
-            
+
+            errorDiv.classList.add('hidden');
+
             if (!username || !password) {
                 showError('Please fill in all fields');
                 return;
             }
-            
+
             try {
                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
@@ -101,12 +144,12 @@
                     },
                     body: JSON.stringify({ username, password }),
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     localStorage.setItem('token', data.token);
-                    localStorage.setItem('username', data.username);
+                    localStorage.setItem('username', data.username || username);
                     window.location.href = '/';
                 } else {
                     showError(data.message || 'Login failed');
@@ -116,7 +159,7 @@
                 showError('Login failed. Please try again.');
             }
         });
-        
+
         function showError(message) {
             const errorDiv = document.getElementById('errorMessage');
             errorDiv.textContent = message;
@@ -124,11 +167,6 @@
             setTimeout(() => {
                 errorDiv.classList.add('hidden');
             }, 5000);
-        }
-        
-        // Check if already logged in
-        if (localStorage.getItem('token')) {
-            window.location.href = '/';
         }
     </script>
 </body>

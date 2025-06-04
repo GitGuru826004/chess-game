@@ -179,31 +179,7 @@
     </style>
 </head>
 <body>
-    <!-- Login Modal (initially hidden) -->
-    <div id="loginModal" class="login-prompt" style="display: none;">
-        <div class="login-form">
-            <h2>Login to Play Chess</h2>
-            <input type="text" id="username" placeholder="Username" required>
-            <input type="password" id="password" placeholder="Password" required>
-            <button onclick="handleLogin()">Login</button>
-            <p style="text-align: center; margin-top: 15px;">
-                <a href="#" onclick="showRegister()">Don't have an account? Register</a>
-            </p>
-        </div>
-    </div>
-    
-    <!-- Register Modal (initially hidden) -->
-    <div id="registerModal" class="login-prompt" style="display: none;">
-        <div class="login-form">
-            <h2>Register for Chess</h2>
-            <input type="text" id="regUsername" placeholder="Username" required>
-            <input type="password" id="regPassword" placeholder="Password" required>
-            <button onclick="handleRegister()">Register</button>
-            <p style="text-align: center; margin-top: 15px;">
-                <a href="#" onclick="showLogin()">Already have an account? Login</a>
-            </p>
-        </div>
-    </div>
+
 
     <!-- Game Status -->
     <div class="game-status">
@@ -212,6 +188,10 @@
         <button onclick="requestNewGame()" style="margin-top: 10px; padding: 5px 10px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
             New Game
         </button>
+        <button onclick="logout()" style="margin-top: 10px; padding: 5px 10px; background: #e53935; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            Logout
+        </button>
+
     </div>
 
     <!-- Chess Board -->
@@ -236,81 +216,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js" integrity="sha512-xRllwz2gdZciIB+AkEbeq+gVhX8VB8XsfqeFbUh+SzHlN96dEduwtTuVuc2u9EROlmW9+yhRlxjif66ORpsgVA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     
     <script>
-        // Authentication functions
-        function showLogin() {
-            document.getElementById('loginModal').style.display = 'flex';
-            document.getElementById('registerModal').style.display = 'none';
-        }
-        
-        function showRegister() {
-            document.getElementById('registerModal').style.display = 'flex';
-            document.getElementById('loginModal').style.display = 'none';
-        }
-        
-        async function handleLogin() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            
-            if (!username || !password) {
-                alert('Please fill in all fields');
+        // Check authentication on page load
+        window.addEventListener('load', function() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login';
                 return;
             }
-            
-            try {
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ username, password }),
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    localStorage.setItem('token', data.token);
-                    document.getElementById('loginModal').style.display = 'none';
-                    initializeGame();
-                } else {
-                    alert(data.message || 'Login failed');
-                }
-            } catch (error) {
-                console.error('Login error:', error);
-                alert('Login failed. Please try again.');
-            }
-        }
-        
-        async function handleRegister() {
-            const username = document.getElementById('regUsername').value;
-            const password = document.getElementById('regPassword').value;
-            
-            if (!username || !password) {
-                alert('Please fill in all fields');
-                return;
-            }
-            
-            try {
-                const response = await fetch('/api/auth/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ username, password }),
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    alert('Registration successful! Please login.');
-                    showLogin();
-                } else {
-                    alert(data.message || 'Registration failed');
-                }
-            } catch (error) {
-                console.error('Registration error:', error);
-                alert('Registration failed. Please try again.');
-            }
-        }
+            initializeGame();
+        });
         
         // Chat functions
         function sendChatMessage() {
@@ -354,19 +268,16 @@
         }
         
         function initializeGame() {
-            // This will be called after successful login
+            // This will be called after authentication check
             // The chessgame.js will handle the socket connection
         }
         
-        // Check authentication on page load
-        window.addEventListener('load', function() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                showLogin();
-            } else {
-                initializeGame();
-            }
-        });
+        // Logout function
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            window.location.href = '/login';
+        }
     </script>
     
     <script src="/js/chessgame.js"></script>
