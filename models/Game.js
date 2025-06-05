@@ -66,6 +66,28 @@ const gameSchema = new mongoose.Schema({
     completedAt: {
         type: Date,
         default: null
+    },
+    
+    // TIMER FIELDS - Added without conflicts
+    timeControl: {
+        type: Number, // in seconds (e.g., 300 for 5 minutes)
+        default: 300
+    },
+    whiteTimeLeft: {
+        type: Number,
+        default: 300
+    },
+    blackTimeLeft: {
+        type: Number,
+        default: 300
+    },
+    lastMoveAt: {
+        type: Date,
+        default: null
+    },
+    currentPlayerStartTime: {
+        type: Date,
+        default: null
     }
 });
 
@@ -90,6 +112,63 @@ gameSchema.methods.completeGame = function(result, winner, reason, finalFEN) {
     this.finalFEN = finalFEN;
     this.completedAt = new Date();
     return this.save();
+};
+
+// NEW TIMER METHODS - Added without conflicts
+gameSchema.methods.startTimer = function(player) {
+    this.currentPlayerStartTime = new Date();
+    if (!this.lastMoveAt) {
+        this.lastMoveAt = new Date();
+    }
+    return this.save();
+};
+
+gameSchema.methods.updateTimeAfterMove = function() {
+    if (!this.currentPlayerStartTime) return this.save();
+    
+    const now = new Date();
+    const timeUsed = Math.floor((now - this.currentPlayerStartTime) / 1000);
+    
+    // Determine current player from FEN
+    const isWhiteTurn = this.currentFEN.includes(' w ');
+    
+    if (isWhiteTurn) {
+        // White just moved, deduct time from white
+        this.whiteTimeLeft = Math.max(0, this.whiteTimeLeft - timeUsed);
+    } else {
+        // Black just moved, deduct time from black
+        this.blackTimeLeft = Math.max(0, this.blackTimeLeft - timeUsed);
+    }
+    
+    // Check for timeout
+    if (this.whiteTimeLeft <= 0 || this.blackTimeLeft <= 0) {
+        const timeoutWinner = this.whiteTimeLeft <= 0 ? this.blackPlayer : this.whitePlayer;
+        const timeoutResult = this.whiteTimeLeft <= 0 ? '0-1' : '1-0';
+        return this.completeGame(timeoutResult, timeoutWinner, 'timeout', this.currentFEN);
+    }
+    
+    this.lastMoveAt = now;
+    this.currentPlayerStartTime = now; // Start timer for next player
+    
+    return this.save();
+};
+
+gameSchema.methods.getCurrentTimeRemaining = function() {
+    if (this.status !== 'active' || !this.currentPlayerStartTime) {
+        return {
+            white: this.whiteTimeLeft,
+            black: this.blackTimeLeft
+        };
+    }
+    
+    const now = new Date();
+    const elapsed = Math.floor((now - this.currentPlayerStartTime) / 1000);
+    const isWhiteTurn = this.currentFEN.includes(' w ');
+    
+    return {
+        white: isWhiteTurn ? Math.max(0, this.whiteTimeLeft - elapsed) : this.whiteTimeLeft,
+        black: !isWhiteTurn ? Math.max(0, this.blackTimeLeft - elapsed) : this.blackTimeLeft
+    };
 };
 
 module.exports = mongoose.model("Game", gameSchema);

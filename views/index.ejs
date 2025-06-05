@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%= title %></title>
+    <title>Enhanced Chess Game</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Chess board styles */
@@ -36,26 +36,26 @@
             box-shadow: inset 0 0 10px rgba(255, 255, 0, 0.5);
         }
         
-.piece {
-    font-size: 50px;
-    cursor: grab;
-    user-select: none;
-    z-index: 10;
-}
+        .piece {
+            font-size: 50px;
+            cursor: grab;
+            user-select: none;
+            z-index: 10;
+        }
 
-.piece:active {
-    cursor: grabbing;
-}
+        .piece:active {
+            cursor: grabbing;
+        }
 
-.piece.white {
-    color: #ffffff;
-    text-shadow: 1px 1px 2px #000000;
-}
+        .piece.white {
+            color: #ffffff;
+            text-shadow: 1px 1px 2px #000000;
+        }
 
-.piece.black {
-    color: #000000;
-    text-shadow: 1px 1px 2px #ffffff;
-}
+        .piece.black {
+            color: #000000;
+            text-shadow: 1px 1px 2px #ffffff;
+        }
         
         /* Flip board for black player */
         .chessboard.flipped {
@@ -71,127 +71,343 @@
             position: fixed;
             top: 20px;
             left: 20px;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.9);
             color: white;
-            padding: 15px;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-width: 280px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-header h3 {
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 10px;
+        }
+
+        .player-role {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.connecting {
+            background-color: #ffa500;
+        }
+
+        .status-indicator.connected {
+            background-color: #4CAF50;
+            animation: none;
+        }
+
+        .status-indicator.error {
+            background-color: #f44336;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .players-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 8px;
-            font-family: 'Courier New', monospace;
+        }
+
+        .player {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+
+        .player-icon {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .white-player .player-icon {
+            color: #ffffff;
+        }
+
+        .black-player .player-icon {
+            color: #666;
+        }
+
+        .vs-divider {
+            font-weight: bold;
+            color: #ffa500;
+            margin: 0 10px;
+        }
+
+        .game-state {
+            text-align: center;
+            font-size: 14px;
+            color: #ccc;
+            font-style: italic;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #45a049;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #da190b;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
         
-        /* Chat section */
+        /* Enhanced Chat section */
         .chat-container {
             position: fixed;
             right: 20px;
             top: 20px;
-            width: 300px;
-            height: 400px;
-            background: rgba(0, 0, 0, 0.9);
-            border-radius: 8px;
+            width: 320px;
+            height: 450px;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(30, 30, 30, 0.95));
+            border-radius: 12px;
             display: flex;
             flex-direction: column;
             color: white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .chat-header {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-weight: bold;
+            font-size: 16px;
+            color: #4CAF50;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px 12px 0 0;
         }
         
         .chat-messages {
             flex: 1;
             overflow-y: auto;
-            padding: 10px;
+            padding: 15px;
             font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        .chat-message {
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid #4CAF50;
+        }
+        
+        .chat-message.system {
+            background: rgba(255, 193, 7, 0.1);
+            border-left-color: #ffc107;
+            font-style: italic;
+            color: #ffc107;
+        }
+        
+        .chat-message .username {
+            font-weight: bold;
+            color: #4CAF50;
+            margin-right: 8px;
+        }
+        
+        .chat-message .timestamp {
+            font-size: 11px;
+            color: #888;
+            float: right;
+        }
+        
+        .chat-message .content {
+            color: #e0e0e0;
+            word-wrap: break-word;
+        }
+        
+        .chat-input-container {
+            padding: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0 0 12px 12px;
         }
         
         .chat-input {
             display: flex;
-            padding: 10px;
-            border-top: 1px solid #333;
+            gap: 10px;
         }
         
         .chat-input input {
             flex: 1;
-            padding: 8px;
-            border: none;
-            border-radius: 4px;
-            margin-right: 10px;
-            background: #333;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
             color: white;
+            font-size: 14px;
+            transition: all 0.2s ease;
         }
         
-        .chat-input button {
-            padding: 8px 15px;
-            background: #4CAF50;
+        .chat-input input:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+        }
+        
+        .chat-input input::placeholder {
+            color: #aaa;
+        }
+        
+        .chat-send-btn {
+            padding: 10px 15px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            min-width: 60px;
         }
         
-        /* Login prompt */
-        .login-prompt {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
+        .chat-send-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+        
+        .chat-send-btn:active {
+            transform: translateY(0);
+        }
+        
+        .chat-send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Chat notification */
+        .chat-notification {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #f44336;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
             display: flex;
-            justify-content: center;
             align-items: center;
-            z-index: 1000;
-        }
-        
-        .login-form {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-            max-width: 400px;
-            width: 90%;
-        }
-        
-        .login-form h2 {
-            margin-bottom: 20px;
-            text-align: center;
-            color: #333;
-        }
-        
-        .login-form input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        
-        .login-form button {
-            width: 100%;
-            padding: 12px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        
-        .login-form button:hover {
-            background: #45a049;
+            justify-content: center;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-
-
     <!-- Game Status -->
     <div class="game-status">
-        <div id="playerRole">Connecting...</div>
-        <div id="gameStatus">Waiting for players...</div>
-        <button onclick="requestNewGame()" style="margin-top: 10px; padding: 5px 10px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            New Game
-        </button>
-        <button onclick="logout()" style="margin-top: 10px; padding: 5px 10px; background: #e53935; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            Logout
-        </button>
-
+        <div class="status-header">
+            <h3 style="margin: 0 0 10px 0; color: #4CAF50; font-size: 18px;">♚ Chess Game</h3>
+        </div>
+        
+        <div class="player-info">
+            <div class="player-role" id="playerRole">
+                <span class="status-indicator connecting" id="connectionStatus"></span>
+                <span id="roleText">Connecting...</span>
+            </div>
+            
+            <div class="game-info" id="gameStatus">
+                <div class="players-display">
+                    <div class="player white-player">
+                        <span class="player-icon">♔</span>
+                        <span id="whitePlayerName">Waiting...</span>
+                    </div>
+                    <div class="vs-divider">VS</div>
+                    <div class="player black-player">
+                        <span class="player-icon">♚</span>
+                        <span id="blackPlayerName">Waiting...</span>
+                    </div>
+                </div>
+                <div class="game-state" id="gameStateText">Waiting for players...</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button onclick="requestNewGame()" class="btn btn-success" id="newGameBtn">
+                🔄 New Game
+            </button>
+            <button onclick="logout()" class="btn btn-danger">
+                🚪 Logout
+            </button>
+        </div>
     </div>
 
     <!-- Chess Board -->
@@ -199,15 +415,21 @@
         <div class="chessboard"></div>
     </div>
     
-    <!-- Chat Container -->
+    <!-- Enhanced Chat Container -->
     <div class="chat-container">
-        <div style="padding: 10px; border-bottom: 1px solid #333; font-weight: bold;">
-            Game Chat
+        <div class="chat-header">
+            💬 Game Chat
         </div>
-        <div class="chat-messages" id="chatMessages"></div>
-        <div class="chat-input">
-            <input type="text" id="chatInput" placeholder="Type a message..." onkeypress="handleChatKeyPress(event)">
-            <button onclick="sendChatMessage()">Send</button>
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-message system">
+                <div class="content">Welcome to the chess game! Chat with your opponent here.</div>
+            </div>
+        </div>
+        <div class="chat-input-container">
+            <div class="chat-input">
+                <input type="text" id="chatInput" placeholder="Type your message..." maxlength="200" onkeypress="handleChatKeyPress(event)">
+                <button onclick="sendChatMessage()" class="chat-send-btn" id="sendBtn">Send</button>
+            </div>
         </div>
     </div>
     
@@ -216,70 +438,344 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js" integrity="sha512-xRllwz2gdZciIB+AkEbeq+gVhX8VB8XsfqeFbUh+SzHlN96dEduwtTuVuc2u9EROlmW9+yhRlxjif66ORpsgVA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     
     <script>
-        // Check authentication on page load
-        window.addEventListener('load', function() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = '/login';
-                return;
+        // 🔐 Check if user is logged in first
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("Please login to play chess!");
+            window.location.href = "/login"; // Redirect to login page
+        }
+
+        // 👉 Include token in the socket connection
+        const socket = io({
+            auth: {
+                token: token
             }
-            initializeGame();
         });
-        
-        // Chat functions
-        function sendChatMessage() {
-            const input = document.getElementById('chatInput');
-            const message = input.value.trim();
-            if (message && window.socket) {
-                window.socket.emit('chatMessage', message);
-                input.value = '';
+
+        // 🛡️ Handle authentication errors
+        socket.on("connect_error", (error) => {
+            console.log("Connection failed:", error.message);
+            alert("Authentication failed. Please login again.");
+            localStorage.removeItem("token");
+            window.location.href = "/login";
+            updateConnectionStatus('error');
+        });
+
+        socket.on("disconnect", (reason) => {
+            if (reason === "io server disconnect") {
+                // Server disconnected the client (likely auth issue)
+                alert("Session expired. Please login again.");
+                localStorage.removeItem("token");
+                window.location.href = "/login";
+            }
+            updateConnectionStatus('error');
+        });
+
+        const chess = new Chess();
+        const boardElement = document.querySelector(".chessboard");
+        let draggedpiece = null;
+        let sourceSquare = null;
+        let playerRole = null;
+
+        const renderBoard = () => {
+            const board = chess.board();
+            boardElement.innerHTML = "";
+            
+            board.forEach((row, rowIndex) => {
+                row.forEach((square, squareIndex) => {
+                    const squareElement = document.createElement("div");
+                    squareElement.classList.add("square", 
+                        (rowIndex + squareIndex) % 2 === 0 ? "light" : "dark"
+                    );
+                    squareElement.dataset.row = rowIndex;
+                    squareElement.dataset.col = squareIndex;
+                    
+                    if (square) {
+                        const pieceElement = document.createElement("div");
+                        pieceElement.classList.add("piece", square.color === 'w' ? 'white' : 'black');
+                        pieceElement.innerText = getPieceUnicode(square);
+                        pieceElement.draggable = playerRole === square.color;
+                        
+                        pieceElement.addEventListener("dragstart", (e) => {
+                            if (pieceElement.draggable) {
+                                draggedpiece = pieceElement;
+                                sourceSquare = { row: rowIndex, col: squareIndex };
+                                e.dataTransfer.setData("text/plain", "");
+                            }
+                        });
+                        
+                        pieceElement.addEventListener("dragend", () => {
+                            draggedpiece = null;
+                            sourceSquare = null;
+                        });
+                        
+                        squareElement.appendChild(pieceElement);
+                    }
+                    
+                    squareElement.addEventListener("dragover", (e) => {
+                        e.preventDefault();
+                    });
+                    
+                    squareElement.addEventListener("drop", function(e) {
+                        e.preventDefault();
+                        if (draggedpiece) {
+                            const targetSquare = { 
+                                row: parseInt(squareElement.dataset.row), 
+                                col: parseInt(squareElement.dataset.col) 
+                            };
+                            handleMove(sourceSquare, targetSquare);
+                        }
+                    });
+                    
+                    boardElement.appendChild(squareElement);
+                });
+            });
+            
+            // Flip board for black player
+            if (playerRole === 'b') {
+                boardElement.classList.add("flipped");
+            } else {
+                boardElement.classList.remove("flipped");
+            }
+        };
+
+        const handleMove = (source, target) => {
+            const move = {
+                from: `${String.fromCharCode(97 + source.col)}${8 - source.row}`,
+                to: `${String.fromCharCode(97 + target.col)}${8 - target.row}`,
+                promotion: 'q'
+            };
+            socket.emit("move", move);
+        };
+
+        const getPieceUnicode = (piece) => {
+            const unicodePieces = {
+                'wk': '♔', 'wq': '♕', 'wr': '♖', 'wb': '♗', 'wn': '♘', 'wp': '♙',
+                'bk': '♚', 'bq': '♛', 'br': '♜', 'bb': '♝', 'bn': '♞', 'bp': '♟'
+            };
+            
+            const pieceKey = piece.color + piece.type;
+            return unicodePieces[pieceKey] || "";
+        };
+
+        // 🎯 UI Update Functions
+        function updateConnectionStatus(status) {
+            const indicator = document.getElementById('connectionStatus');
+            const roleText = document.getElementById('roleText');
+            
+            if (!indicator || !roleText) return; // Safety check
+            
+            if (status === 'connected') {
+                indicator.className = 'status-indicator connected';
+                roleText.textContent = playerRole === 'w' ? 'You are White Player' : 
+                                      playerRole === 'b' ? 'You are Black Player' : 'Spectating';
+            } else if (status === 'connecting') {
+                indicator.className = 'status-indicator connecting';
+                roleText.textContent = 'Connecting...';
+            } else {
+                indicator.className = 'status-indicator error';
+                roleText.textContent = 'Connection Error';
             }
         }
-        
+
+        function updateGameState(white, black, gameReady = false) {
+            const whitePlayerEl = document.getElementById('whitePlayerName');
+            const blackPlayerEl = document.getElementById('blackPlayerName');
+            const gameStateText = document.getElementById('gameStateText');
+            const newGameBtn = document.getElementById('newGameBtn');
+            
+            // Safety checks
+            if (whitePlayerEl) whitePlayerEl.textContent = white || 'Waiting...';
+            if (blackPlayerEl) blackPlayerEl.textContent = black || 'Waiting...';
+            
+            if (gameStateText && newGameBtn) {
+                if (gameReady && white && black) {
+                    gameStateText.textContent = 'Game Active - Make your move!';
+                    newGameBtn.disabled = false;
+                } else if (white && !black) {
+                    gameStateText.textContent = 'Waiting for Black player...';
+                    newGameBtn.disabled = true;
+                } else if (!white && black) {
+                    gameStateText.textContent = 'Waiting for White player...';
+                    newGameBtn.disabled = true;
+                } else {
+                    gameStateText.textContent = 'Waiting for players...';
+                    newGameBtn.disabled = true;
+                }
+            }
+        }
+
+        // New game request function
+        function requestNewGame() {
+            socket.emit("requestNewGame");
+        }
+
+        // Enhanced Chat Functions
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const message = input.value.trim();
+            
+            if (message && socket && socket.connected) {
+                // Disable send button temporarily
+                sendBtn.disabled = true;
+                socket.emit('chatMessage', message);
+                input.value = '';
+                
+                // Re-enable send button after short delay
+                setTimeout(() => {
+                    sendBtn.disabled = false;
+                }, 500);
+            }
+        }
+
         function handleChatKeyPress(event) {
-            if (event.key === 'Enter') {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
                 sendChatMessage();
             }
         }
-        
-        function addChatMessage(data) {
+
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function addChatMessage(data, isSystem = false) {
             const chatMessages = document.getElementById('chatMessages');
             const messageDiv = document.createElement('div');
-            messageDiv.style.marginBottom = '5px';
-            messageDiv.innerHTML = `<strong>${data.userId}:</strong> ${data.message}`;
+            messageDiv.className = `chat-message ${isSystem ? 'system' : ''}`;
+            
+            if (isSystem) {
+                messageDiv.innerHTML = `<div class="content">${data}</div>`;
+            } else {
+                const timestamp = data.timestamp ? formatTimestamp(data.timestamp) : formatTimestamp(new Date().toISOString());
+                messageDiv.innerHTML = `
+                    <div class="timestamp">${timestamp}</div>
+                    <span class="username">${data.username || data.userId}:</span>
+                    <div class="content">${data.message}</div>
+                `;
+            }
+            
             chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-        
-        // Game functions
-        function requestNewGame() {
-            if (window.socket) {
-                window.socket.emit('requestNewGame');
+            
+            // Limit chat messages to prevent memory issues
+            if (chatMessages.children.length > 50) {
+                chatMessages.removeChild(chatMessages.firstChild);
             }
         }
-        
-        function updateGameStatus(status) {
-            document.getElementById('gameStatus').textContent = status;
-        }
-        
-        function updatePlayerRole(role) {
-            const roleText = role === 'w' ? 'White Player' : role === 'b' ? 'Black Player' : 'Spectator';
-            document.getElementById('playerRole').textContent = `You are: ${roleText}`;
-        }
-        
-        function initializeGame() {
-            // This will be called after authentication check
-            // The chessgame.js will handle the socket connection
-        }
-        
+
         // Logout function
         function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('username');
-            window.location.href = '/login';
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('username');
+                window.location.href = '/login';
+            }
         }
+
+        // 🎯 Socket Event Listeners
+
+        // Connection success
+        socket.on("connect", () => {
+            console.log("Connected to server as authenticated user");
+            updateConnectionStatus('connected');
+            addChatMessage("Connected to game server!", true);
+        });
+
+        // Initial connection status
+        updateConnectionStatus('connecting');
+
+        // Role assignment events from server
+        socket.on("playerRole", function(role) {
+            playerRole = role;
+            console.log(`Assigned role: ${role === 'w' ? 'White' : 'Black'}`);
+            updateConnectionStatus('connected');
+            renderBoard();
+            addChatMessage(`You are playing as ${role === 'w' ? 'White' : 'Black'}!`, true);
+        });
+
+        socket.on("spectatorRole", function() {
+            playerRole = null;
+            console.log("Assigned as spectator");
+            alert("Game is full. You are now spectating.");
+            updateConnectionStatus('connected');
+            renderBoard();
+            addChatMessage("You are spectating this game.", true);
+        });
+
+        // Game state updates
+        socket.on("boardState", function(fen) {
+            chess.load(fen);
+            renderBoard();
+        });
+
+        socket.on("move", function(move) {
+            chess.move(move);
+            renderBoard();
+        });
+
+        // Game ready event
+        socket.on("gameReady", function(data) {
+            console.log("Game is ready!", data);
+            updateGameState(data.whiteUsername, data.blackUsername, true);
+            addChatMessage("Game is ready! Good luck to both players!", true);
+        });
+
+        // Player disconnection
+        socket.on("playerDisconnected", function(message) {
+            console.log("Player disconnected:", message);
+            updateGameState(null, null, false);
+            alert(message);
+            addChatMessage(message, true);
+        });
+
+        // Error handling
+        socket.on("invalidMove", function(move) {
+            console.log("Invalid move attempted:", move);
+            alert("Invalid move! Please try again.");
+        });
+
+        socket.on("unauthorizedMove", function() {
+            alert("It's not your turn or you can't move that piece!");
+        });
+
+        // Game events
+        socket.on("gameOver", function(result) {
+            alert(`Game Over! ${result}`);
+            addChatMessage(`Game Over! ${result}`, true);
+            updateGameState(null, null, false);
+        });
+
+        socket.on("check", function() {
+            alert("Check!");
+            addChatMessage("Check!", true);
+        });
+
+        socket.on("checkmate", function(winner) {
+            alert(`Checkmate! ${winner} wins!`);
+            addChatMessage(`Checkmate! ${winner} wins!`, true);
+            updateGameState(null, null, false);
+        });
+
+        socket.on("stalemate", function() {
+            alert("Stalemate! It's a draw.");
+            addChatMessage("Stalemate! It's a draw.", true);
+            updateGameState(null, null, false);
+        });
+
+        // Enhanced Chat Event Listeners
+        socket.on("chatMessage", function(data) {
+            addChatMessage(data);
+        });
+
+        socket.on("newGameStarted", function(message) {
+            addChatMessage(message, true);
+        });
+
+        // Initialize board
+        renderBoard();
     </script>
-    
-    <script src="/js/chessgame.js"></script>
 </body>
 </html>

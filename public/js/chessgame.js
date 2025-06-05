@@ -18,6 +18,7 @@ socket.on("connect_error", (error) => {
     alert("Authentication failed. Please login again.");
     localStorage.removeItem("token");
     window.location.href = "/login";
+    updateConnectionStatus('error');
 });
 
 socket.on("disconnect", (reason) => {
@@ -27,6 +28,7 @@ socket.on("disconnect", (reason) => {
         localStorage.removeItem("token");
         window.location.href = "/login";
     }
+    updateConnectionStatus('error');
 });
 
 const chess = new Chess();
@@ -116,17 +118,74 @@ const getPieceUnicode = (piece) => {
     return unicodePieces[pieceKey] || "";
 };
 
+// 🎯 UI Update Functions
+function updateConnectionStatus(status) {
+    const indicator = document.getElementById('connectionStatus');
+    const roleText = document.getElementById('roleText');
+    
+    if (!indicator || !roleText) return; // Safety check
+    
+    if (status === 'connected') {
+        indicator.className = 'status-indicator connected';
+        roleText.textContent = playerRole === 'w' ? 'You are White Player' : 
+                              playerRole === 'b' ? 'You are Black Player' : 'Spectating';
+    } else if (status === 'connecting') {
+        indicator.className = 'status-indicator connecting';
+        roleText.textContent = 'Connecting...';
+    } else {
+        indicator.className = 'status-indicator error';
+        roleText.textContent = 'Connection Error';
+    }
+}
+
+function updateGameState(white, black, gameReady = false) {
+    const whitePlayerEl = document.getElementById('whitePlayerName');
+    const blackPlayerEl = document.getElementById('blackPlayerName');
+    const gameStateText = document.getElementById('gameStateText');
+    const newGameBtn = document.getElementById('newGameBtn');
+    
+    // Safety checks
+    if (whitePlayerEl) whitePlayerEl.textContent = white || 'Waiting...';
+    if (blackPlayerEl) blackPlayerEl.textContent = black || 'Waiting...';
+    
+    if (gameStateText && newGameBtn) {
+        if (gameReady && white && black) {
+            gameStateText.textContent = 'Game Active - Make your move!';
+            newGameBtn.disabled = false;
+        } else if (white && !black) {
+            gameStateText.textContent = 'Waiting for Black player...';
+            newGameBtn.disabled = true;
+        } else if (!white && black) {
+            gameStateText.textContent = 'Waiting for White player...';
+            newGameBtn.disabled = true;
+        } else {
+            gameStateText.textContent = 'Waiting for players...';
+            newGameBtn.disabled = true;
+        }
+    }
+}
+
+// New game request function
+function requestNewGame() {
+    socket.emit("requestNewGame");
+}
+
 // 🎯 Socket Event Listeners
 
 // Connection success
 socket.on("connect", () => {
     console.log("Connected to server as authenticated user");
+    updateConnectionStatus('connected');
 });
+
+// Initial connection status
+updateConnectionStatus('connecting');
 
 // Role assignment events from server
 socket.on("playerRole", function(role) {
     playerRole = role;
     console.log(`Assigned role: ${role === 'w' ? 'White' : 'Black'}`);
+    updateConnectionStatus('connected');
     renderBoard();
 });
 
@@ -134,6 +193,7 @@ socket.on("spectatorRole", function() {
     playerRole = null;
     console.log("Assigned as spectator");
     alert("Game is full. You are now spectating.");
+    updateConnectionStatus('connected');
     renderBoard();
 });
 
@@ -146,6 +206,19 @@ socket.on("boardState", function(fen) {
 socket.on("move", function(move) {
     chess.move(move);
     renderBoard();
+});
+
+// Game ready event
+socket.on("gameReady", function(data) {
+    console.log("Game is ready!", data);
+    updateGameState(data.whiteUsername, data.blackUsername, true);
+});
+
+// Player disconnection
+socket.on("playerDisconnected", function(message) {
+    console.log("Player disconnected:", message);
+    updateGameState(null, null, false);
+    alert(message);
 });
 
 // Error handling
@@ -161,10 +234,22 @@ socket.on("unauthorizedMove", function() {
 // Game events
 socket.on("gameOver", function(result) {
     alert(`Game Over! ${result}`);
+    // Reset game state
+    updateGameState(null, null, false);
 });
 
 socket.on("check", function() {
     alert("Check!");
+});
+
+socket.on("checkmate", function(winner) {
+    alert(`Checkmate! ${winner} wins!`);
+    updateGameState(null, null, false);
+});
+
+socket.on("stalemate", function() {
+    alert("Stalemate! It's a draw.");
+    updateGameState(null, null, false);
 });
 
 // Initialize board
